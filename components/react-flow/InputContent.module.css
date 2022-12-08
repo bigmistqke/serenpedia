@@ -1,0 +1,16 @@
+.input {
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0px;
+  outline: none;
+  margin: 0px;
+}
+
+.measure {
+  position: absolute;
+  left: -100px;
+  top: -100px;
+  white-space: pre;
+  pointer-events: none;
+  visibility: hidden;
+}

@@ -1,0 +1,81 @@
+.wikiNode {
+  background: white;
+  padding: 10px;
+  border-radius: 25px;
+  position: relative;
+  padding-right: 20px;
+}
+
+.wikiNode * {
+  color: grey;
+}
+
+.wikiNode span,
+.wikiNode button {
+  padding-right: 15px;
+}
+
+.wikiNode input {
+  padding-right: 0px;
+}
+
+.wikiNode input:hover,
+.wikiNode button:hover {
+  color: black;
+}
+
+.wikiNode input,
+.wikiNode span,
+.wikiNode button {
+  border-radius: 10px;
+  outline: none;
+  background: transparent;
+  padding-left: 10px;
+  border: none;
+  font-size: inherit;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+  gap: 5px;
+  padding: 5px;
+  padding-right: 0px;
+  pointer-events: none;
+  position: absolute;
+  top: -35px;
+  right: 0px;
+}
+
+.handle {
+  background: white;
+  /* margin-right: -15px; */
+  border: 1px solid lightgrey;
+}
+
+.buttons button {
+  height: 25px;
+  width: 25px;
+  line-height: 25px;
+  border-radius: 50%;
+
+  pointer-events: all;
+  z-index: 10;
+}
+
+.buttons button,
+.handle:hover {
+  background-color: lightgrey;
+  border: 1px solid white;
+}
+.buttons button *,
+.handle:hover * {
+  fill: white;
+}
+.buttons button:hover {
+  background: white;
+}
+.buttons button:hover * {
+  fill: lightgrey;
+}
