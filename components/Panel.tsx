@@ -1,32 +1,38 @@
-import { useCallback, useEffect, useMemo } from 'react'
-import shallow from 'zustand/shallow'
-import useStore, { RFState } from '../store'
+import { useCallback } from 'react'
+import { CgArrowTopRight } from 'react-icons/cg'
+import useStore from '../store'
 import s from './Panel.module.css'
-import Image from 'next/image'
-import { IoMdClose } from 'react-icons/io'
 
 function Panel() {
   const { selectedWikiData, setSelectedWikiData } = useStore()
 
   const onClick = useCallback(() => {
     setSelectedWikiData(undefined)
-  }, [])
+  }, [setSelectedWikiData])
 
   return (
     <>
       {selectedWikiData && selectedWikiData.html ? (
         <div className={s.panel}>
-          <button onClick={onClick} className={s.close}>
-            <IoMdClose />
-          </button>
+          <div className={s.panelButtons}>
+            <a
+              href={selectedWikiData.url.desktop}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <CgArrowTopRight />
+            </a>
+          </div>
           <div className={s.content}>
             <h1 className={s.title}>{selectedWikiData.title}</h1>
             {selectedWikiData.thumbnail ? (
               <div className={s.thumbnail}>
-                <img
-                  src={selectedWikiData.thumbnail}
-                  alt={selectedWikiData.title}
-                />
+                {selectedWikiData.thumbnail ? (
+                  <img
+                    src={selectedWikiData.thumbnail}
+                    alt={selectedWikiData.title}
+                  />
+                ) : undefined}
               </div>
             ) : undefined}
             <div

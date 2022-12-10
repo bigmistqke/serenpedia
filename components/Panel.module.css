@@ -1,5 +1,5 @@
 .panel {
-  height: 100vh;
+  max-height: calc(100% - 20px);
   width: 350px;
   z-index: 5;
   display: flex;
@@ -7,18 +7,20 @@
   position: absolute;
   left: 0px;
   top: 0px;
-  background: white;
-  color: darkgrey;
-
-  opacity: 0.9;
-
+  background: rgba(255, 255, 255, 0.9);
+  color: grey;
   overflow: none;
   box-shadow: 0px 0px 50px lightgrey;
+  margin: 10px;
+  border-radius: 19px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .title {
+  padding-left: 10px;
   padding-right: 50px;
-  margin-top: 25px;
+  margin-top: 12px;
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -26,6 +28,7 @@
 .thumbnail {
   padding: 10px;
   text-align: center;
+  padding-right: 20px;
 }
 .thumbnail img {
   max-height: 250px;
@@ -36,27 +39,40 @@
 .content {
   height: 100%;
   width: 100%;
-  padding: 25px;
-  padding-right: 50px;
-  padding-left: 35px;
+  padding: 10px;
+  padding-left: 15px;
   overflow: auto;
 }
-
-.close {
+.panelButtons {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  height: 35px;
-  width: 35px;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 5px;
+  flex-direction: column;
+}
+.panelButtons > * {
+  height: 33px;
+  width: 33px;
   line-height: 25px;
   border-radius: 50%;
-  background-color: darkgrey;
+  background-color: #dfdfdf;
   border: 1px solid white;
-  padding: 5px;
+  padding: 2px;
 }
-.close * {
+.panelButtons > *:hover {
+  background-color: white;
+  border: 2px solid #dfdfdf;
+}
+.panelButtons > *:hover path {
+  fill: darkgrey;
+}
+.panelButtons svg {
   height: 100%;
   width: 100%;
+  fill: white;
+}
+.panelButtons svg * {
   fill: white;
 }
 
@@ -65,12 +81,18 @@
 }
 .close:hover {
   background: white;
-  border: 2px solid darkgrey;
+  border: 2px solid lightgrey;
 }
 .close:hover * {
-  fill: lightgrey;
+  fill: darkgrey;
 }
 
 .extract {
   padding-left: 10px;
+  padding-right: 50px;
+  color: darkgrey;
+}
+
+.link {
+  color: blue;
 }

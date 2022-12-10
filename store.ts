@@ -1,31 +1,40 @@
-import create from 'zustand'
 import {
+  addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
   Connection,
   Edge,
   EdgeChange,
   Node,
   NodeChange,
-  addEdge,
-  OnNodesChange,
-  OnEdgesChange,
   OnConnect,
-  applyNodeChanges,
-  applyEdgeChanges,
-  Position,
+  OnEdgesChange,
+  OnNodesChange,
 } from 'reactflow'
-import wiki from 'wikipedia'
 import zeptoid from 'zeptoid'
+import create from 'zustand'
+
+export type WikiUrl = {
+  desktop: string
+  mobile: string
+}
 
 export type WikiData = {
   title: string
   html: string
   thumbnail: string
+  url: WikiUrl
 }
 
 export type NodeType = 'loading' | 'query' | 'normal' | 'select'
 
 export type LoadingNodeData = {
   type: 'loading'
+}
+
+export type ErrorNodeData = {
+  type: 'error'
+  message: string
 }
 
 export type SelectNodeData = {
@@ -35,9 +44,8 @@ export type SelectNodeData = {
 
 export type QueryNodeData = {
   type: 'query'
-  self: {
-    title: string
-  }
+  title: string
+  completions: string[]
 }
 
 export type NormalNodeData = {
@@ -51,17 +59,17 @@ export type NodeData =
   | QueryNodeData
   | NormalNodeData
   | SelectNodeData
+  | ErrorNodeData
 
-const initialNodes: Node<NodeData>[] = [
+const initialNodes: () => Node<NodeData>[] = () => [
   {
-    id: '1',
+    id: zeptoid(),
     type: 'defaultNode',
     position: { x: 0, y: 0 },
     data: {
       type: 'query',
-      self: {
-        title: '',
-      },
+      title: '',
+      completions: [],
     },
   },
 ]
@@ -71,11 +79,13 @@ const getNormalNode = ({
   position,
   html,
   thumbnail,
+  url,
 }: {
   title: string
   position: { x: number; y: number }
   html: string
   thumbnail: string
+  url: WikiUrl
 }): Node<NodeData> => ({
   id: zeptoid(),
   type: 'defaultNode',
@@ -86,6 +96,7 @@ const getNormalNode = ({
       title,
       html,
       thumbnail,
+      url,
     },
     relateds: [],
   },
@@ -133,6 +144,9 @@ export type RFState = {
   onNodesChange: OnNodesChange
   onEdgesChange: OnEdgesChange
   onConnect: OnConnect
+  open: (data: { nodes: Node<NodeData>[]; edges: Edge[] }) => void
+  init: () => void
+  removeNode: (id: string) => void
   createLoadingNode: (
     id: string,
     position: { x: number; y: number }
@@ -142,18 +156,31 @@ export type RFState = {
     position: { x: number; y: number },
     options: WikiData[]
   ) => string | undefined
+
+  setNodePosition: (nodeId: string, position: { x: number; y: number }) => void
   setNodeDataTitle: (nodeId: string, title: string) => void
-  setNodeDataType: (id: string, type: NodeType) => void
   setNodeDataSelf: (nodeId: string, self: WikiData) => void
   setNodeDataRelateds: (nodeId: string, relateds: WikiData[]) => void
+  setNodeDataCompletions: (nodeId: string, completions: string[]) => void
   setNodeDataOptions: (nodeId: string, options: WikiData[]) => void
+
+  setNodeToNormal: (
+    nodeId: string,
+    self: WikiData,
+    relateds: WikiData[]
+  ) => void
+  setNodeToSelect: (nodeId: string, options: WikiData[]) => void
+  setNodeToError: (nodeId: string, message: string) => void
+  setNodeToQuery: (nodeId: string, title: string, completions: string[]) => void
+  setNodeToLoading: (nodeId: string) => void
+
   setHoveredNodeId: (nodeId: string | undefined) => void
   setSelectedWikiData: (wikiData: WikiData | undefined) => void
 }
 
 // this is our useStore hook that we can use in our components to get parts of the store and call actions
 const useStore = create<RFState>((set, get) => ({
-  nodes: initialNodes,
+  nodes: initialNodes(),
   edges: initialEdges,
   hoveredNodeId: undefined,
   selectedWikiData: undefined,
@@ -172,6 +199,33 @@ const useStore = create<RFState>((set, get) => ({
       edges: addEdge(connection, get().edges),
     })
   },
+  open: (data: { nodes: Node<NodeData>[]; edges: Edge[] }) => {
+    set({
+      nodes: data.nodes,
+      edges: data.edges,
+      selectedWikiData: undefined,
+    })
+  },
+  init: () => {
+    set({
+      nodes: initialNodes(),
+      edges: [],
+      selectedWikiData: undefined,
+    })
+  },
+  removeNode: (id: string) => {
+    const iterate = (id: string) => {
+      set({
+        nodes: get().nodes.filter((node) => node.id !== id),
+      })
+      const edges = get().edges.filter((edge) => edge.target === id)
+      edges.forEach((edge) => iterate(edge.source))
+    }
+    set({
+      selectedWikiData: undefined,
+    })
+    iterate(id)
+  },
   createLoadingNode: (sourceId: string, position: { x: number; y: number }) => {
     const node = get().nodes.find((node) => node.id === sourceId)
 
@@ -181,8 +235,6 @@ const useStore = create<RFState>((set, get) => ({
     }
 
     const newId = zeptoid()
-
-    console.log('loadingnode', position)
 
     const newNode = getLoadingNode(newId, position)
     const newEdge = getDefaultEdge(sourceId, newId)
@@ -218,31 +270,57 @@ const useStore = create<RFState>((set, get) => ({
 
     return newId
   },
+  setNodePosition: (nodeId: string, position: { x: number; y: number }) => {
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id === nodeId) {
+          node.position = position
+        }
+        return node
+      }),
+    })
+  },
   setNodeDataTitle: (nodeId: string, title: string) => {
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
-          if (node.data.type !== 'loading') {
-            const self = {
-              ...node.data.self,
-              title,
-            }
-            // TODO: fix non-critical type-error
-            node.data = { ...node.data, self }
+          if (node.data.type === 'normal') {
+            node.data.self.title = title
+          } else if (node.data.type === 'query') {
+            node.data.title = title
           } else {
-            console.error('tried to set data.self.title of a loading node')
+            console.error(
+              'setNodeDataTitle error: node is not of type `normal` or `query`'
+            )
           }
         }
         return node
       }),
     })
   },
-  setNodeDataType: (id: string, type: NodeType) => {
+  setNodeToSelect: (id: string, options: WikiData[]) => {
     set({
       nodes: [
         ...get().nodes.map((node) => {
           if (node.id === id) {
-            node.data.type = type
+            node.data = {
+              type: 'select',
+              options,
+            }
+          }
+          return node
+        }),
+      ],
+    })
+  },
+  setNodeToLoading: (id) => {
+    set({
+      nodes: [
+        ...get().nodes.map((node) => {
+          if (node.id === id) {
+            node.data = {
+              type: 'loading',
+            }
           }
           return node
         }),
@@ -257,15 +335,16 @@ const useStore = create<RFState>((set, get) => ({
             node.data = { ...node.data, self }
           } else {
             console.error(
-              'tried to set data.self of a node that was not yet of type.normal'
+              'tried to set data.self of a node which is not of type.normal'
             )
           }
         }
-        console.log('self is', node)
+
         return { ...node }
       }),
     })
   },
+
   setNodeDataRelateds: (nodeId: string, relateds: WikiData[]) => {
     set({
       nodes: get().nodes.map((node) => {
@@ -275,7 +354,7 @@ const useStore = create<RFState>((set, get) => ({
             node.data = { ...node.data, relateds }
           } else {
             console.error(
-              'tried to set data.related of a node that was not yet of type.normal'
+              'tried to set data.related of a node which is not of type.normal'
             )
           }
         }
@@ -289,15 +368,86 @@ const useStore = create<RFState>((set, get) => ({
         if (node.id === nodeId) {
           // it's important to create a new object here, to inform React Flow about the cahnges
           if (node.data.type === 'select') {
-            node.data = { type: 'select', options }
+            node.data = { ...node.data, options }
           } else {
             console.error(
-              'tried to set data.related of a node that was not yet of type.normal'
+              'tried to set data.options of a node which is not of type.select'
             )
           }
         }
         return { ...node }
       }),
+    })
+  },
+  setNodeDataCompletions: (nodeId: string, completions: string[]) => {
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id === nodeId) {
+          // it's important to create a new object here, to inform React Flow about the cahnges
+          if (node.data.type === 'query') {
+            node.data = { ...node.data, completions }
+          } else {
+            console.error(
+              'tried to set data.completions of a node which is not of type.query'
+            )
+          }
+        }
+        return { ...node }
+      }),
+    })
+  },
+  setNodeToNormal: (nodeId: string, self: WikiData, relateds: WikiData[]) => {
+    set({
+      nodes: [
+        ...get().nodes.map((n) => {
+          if (n.id === nodeId) {
+            n.data = {
+              type: 'normal',
+              self,
+              relateds,
+            }
+          }
+          return n
+        }),
+      ],
+    })
+  },
+  setNodeToError: (id: string, message: string) => {
+    set({
+      nodes: [
+        ...get().nodes.map((node) => {
+          if (node.id === id) {
+            node.data = {
+              type: 'error',
+              message,
+            }
+          }
+          return node
+        }),
+      ],
+    })
+  },
+  setNodeToQuery: (id: string, title: string, completions: string[]) => {
+    set({
+      nodes: [
+        ...get().nodes.map((node) => {
+          if (node.id === id) {
+            // const title =
+            // 'self' in node.data
+            //   ? node.data.self.title
+            //   : "title" in node.data
+            //     ? node.data.title
+            //     : "";
+
+            node.data = {
+              type: 'query',
+              title,
+              completions,
+            }
+          }
+          return node
+        }),
+      ],
     })
   },
   connectNodes: (sourceId: string, targetId: string) => {

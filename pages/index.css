@@ -14,3 +14,11 @@ input[type='reset'] {
   color: black;
   background: lightgrey;
 }
+
+.react-flow__panel {
+  display: none;
+}
+
+body {
+  scrollbar-color: lightgrey white;
+}

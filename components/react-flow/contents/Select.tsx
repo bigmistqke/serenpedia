@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useReactFlow } from 'reactflow'
-import useStore, { WikiData } from '../../store'
-import when from '../../utils/when'
-import lookUp from '../../utils/wikipedia/lookUp'
-import s from './SelectContent.module.css'
+import { useReactFlow, Node } from 'reactflow'
+import useStore, {
+  NodeData,
+  NormalNodeData,
+  SelectNodeData,
+  WikiData,
+} from '../../../store'
+import when from '../../../utils/when'
+import lookUp from '../../../utils/wikipedia/page'
+import s from './Select.module.css'
 
-function SelectContent({
-  id,
+function Select({
+  node,
   options,
-  xPos,
-  yPos,
 }: {
-  id: string
+  node: Node<SelectNodeData>
   options: WikiData[]
 }) {
   const {
@@ -20,12 +23,11 @@ function SelectContent({
     createLoadingNode,
     setNodeDataSelf,
     setNodeDataRelateds,
-    setNodeDataType,
+    setNodeToNormal,
+    setNodeToSelect,
     setNodeDataOptions,
     setHoveredNodeId,
   } = useStore()
-
-  const { project } = useReactFlow()
 
   const [opened, setOpened] = useState(false)
   const [selection, setSelection] = useState<WikiData>()
@@ -41,23 +43,22 @@ function SelectContent({
     const look = async () => {
       if (!selection || !ref.current) return
       setHoveredNodeId(undefined)
-      setNodeDataType(id, 'normal')
-      setNodeDataSelf(id, selection)
-      const position = nodes.find((node) => node.id === id)?.position
+      // node = setNodeDataType(node, 'normal')
+      // setNodeDataSelf(node, selection)
+      setNodeToNormal(node.id, selection, options)
+
+      const position = nodes.find((n) => n.id === node.id)?.position
       when(
         position &&
-          createLoadingNode(id, {
+          createLoadingNode(node.id, {
             x: position.x + ref.current.offsetWidth + 50,
             y: position.y,
           }),
         await lookUp(selection.title)
       ).then((newId, data) => {
-        setNodeDataRelateds(id, [])
-        setNodeDataType(newId, 'select')
-
         if (data.relateds) {
-          setNodeDataRelateds(id, data.relateds)
-          setNodeDataOptions(newId, data.relateds)
+          // setNodeToNormal(node.id, selection, data.relateds)
+          setNodeToSelect(newId, data.relateds)
         } else {
           console.error('could not find relateds!!')
         }
@@ -78,7 +79,6 @@ function SelectContent({
       <div
         className={`${s.container} nowheel`}
         onWheel={(e) => {
-          console.log('this happens/')
           e.preventDefault()
           e.stopPropagation()
         }}
@@ -103,4 +103,4 @@ function SelectContent({
 
   return <div ref={ref}>{content()}</div>
 }
-export default SelectContent
+export default Select

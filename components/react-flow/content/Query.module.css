@@ -1,0 +1,41 @@
+.inputContainer {
+  position: relative;
+  padding-right: 15px;
+}
+
+.input,
+.measure {
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0px;
+  outline: none;
+  margin: 0px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+.input {
+  width: 100%;
+}
+
+.input:focus {
+  color: black;
+}
+
+.input {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  /* pointer-events: none; */
+  z-index: 1;
+  /* white-space: pre; */
+  /* pointer-events: none;
+  visibility: hidden; */
+}
+
+.measure > * {
+  padding-left: 0px !important;
+}
+
+.error * {
+  color: red !important;
+}

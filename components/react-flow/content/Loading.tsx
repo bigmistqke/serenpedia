@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCallback } from 'react'
+import s from './Loading.module.css'
 
-function LoadingContent() {
+function Loading() {
   const [ellipses, setEllipses] = useState('')
   let ellipsesRef = useRef('')
 
@@ -11,7 +12,7 @@ function LoadingContent() {
       if (ellipsesRef.current.length < 3)
         ellipsesRef.current = ellipsesRef.current + '.'
       else ellipsesRef.current = ''
-      console.log('timer')
+      
       setEllipses(ellipsesRef.current)
     }, 250)
 
@@ -20,7 +21,7 @@ function LoadingContent() {
     }
   }, [])
 
-  return <span style={{ display: 'flex' }}>loading{ellipses}</span>
+  return <span className={s.loading}>loading{ellipses}</span>
 }
 
-export default LoadingContent
+export default Loading

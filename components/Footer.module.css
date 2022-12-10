@@ -1,0 +1,28 @@
+.footer {
+  height: 40px;
+  display: flex;
+  padding: 5px;
+  /* background: #efefef; */
+  background: white;
+}
+
+.container {
+  display: flex;
+  gap: 5px;
+}
+
+.container button {
+  background: #e8e8e8;
+  color: grey;
+  border-radius: 50px;
+  padding-left: 15px;
+  padding-right: 15px;
+  border: 2px solid transparent;
+}
+
+.container button:hover,
+.container button.selected {
+  border: 2px solid #e8e8e8;
+  background: white;
+  color: black;
+}

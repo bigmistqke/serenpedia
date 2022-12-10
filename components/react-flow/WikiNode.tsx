@@ -1,124 +1,181 @@
-import { useCallback, useRef } from 'react'
-import { IoIosAdd, IoIosTrash, IoMdInformation } from 'react-icons/io'
-import { AiOutlineLoading3Quarters } from 'react-icons/ai'
+import { useCallback, useRef, useState } from 'react'
+import { CgArrowTopRight } from 'react-icons/cg'
+import { IoIosAdd, IoIosTrash } from 'react-icons/io'
 import { Handle, NodeProps, Position, useReactFlow } from 'reactflow'
 import useStore, { NodeData } from '../../store'
-import when from '../../utils/when'
-import InputContent from './InputContent'
-import SelectContent from './SelectContent'
-import s from './WikiNode.module.css'
-import LoadingContent from './LoadingContent'
-import handler from '../../pages/api/hello'
 import cursor from '../../utils/cursor'
+import Query from './content/Query'
+import Loading from './content/Loading'
+import Normal from './content/Normal'
+import Select from './content/Select'
+import Error from './content/Error'
 
-export default function WikiNode({
-  id,
-  data,
-  xPos,
-  yPos,
-}: NodeProps<NodeData>) {
+import s from './WikiNode.module.css'
+
+export default function WikiNode({ id, data }: NodeProps<NodeData>) {
   const {
     nodes,
     setHoveredNodeId,
-    setSelectedWikiData,
+    selectedWikiData,
     hoveredNodeId,
     createSelectNode,
+    removeNode,
+    setNodePosition,
   } = useStore()
 
   const { project } = useReactFlow()
 
+  const [loadingNodeId, setLoadingNodeId] = useState<string | undefined>()
+
   const ref = useRef<HTMLDivElement>(null)
 
-  const onMouseEnter = useCallback(() => {
+  const onMouseMove = useCallback(() => {
     setHoveredNodeId(id)
-  }, [])
+  }, [setHoveredNodeId, id])
 
-  const selectWikiData = useCallback(() => {
-    if (data.type === 'normal') setSelectedWikiData(data.self)
-  }, [data.type, data.self])
+  const onDragHandle = useCallback(async () => {
+    const { clientX, clientY } = await cursor()
+    if (data.type !== 'normal' || !ref.current?.offsetWidth) return
+    createSelectNode(id, project({ x: clientX, y: clientY }), data.relateds)
+  }, [ref, data, createSelectNode, id, project])
 
   const content = useCallback(() => {
     switch (data.type) {
       case 'query':
-        return <InputContent id={id} title={data.self?.title} />
-      case 'loading':
-        return <LoadingContent />
-      case 'normal':
         return (
-          <span onMouseEnter={() => selectWikiData()}>{data.self?.title}</span>
+          <Query
+            id={id}
+            title={data.title}
+            completions={data.completions}
+            loadingNodeId={loadingNodeId}
+            setLoadingNodeId={setLoadingNodeId}
+          />
         )
+      case 'loading':
+        return <Loading />
+      case 'normal':
+        return <Normal data={data} />
       case 'select':
-        return <SelectContent id={id} options={data.options} />
+        return <Select id={id} options={data.options} />
+      case 'error':
+        return <Error message={data.message} />
       default:
         return <span>error</span>
     }
-  }, [id, data.type, data.self, data.options])
+  }, [id, data])
 
-  const onDragHandle = useCallback(async () => {
-    const { clientX, clientY } = await cursor()
-    console.log(xPos, yPos)
-    if (data.type !== 'normal' || !ref.current?.offsetWidth) return
-    createSelectNode(id, project({ x: clientX, y: clientY }), data.relateds)
-  }, [ref, data.relateds])
+  const addNode = async (e) => {
+    if (data.type !== 'normal') return
+
+    const width = ref.current?.offsetWidth
+    const position = nodes.find((node) => node.id === id)?.position
+
+    if (!position || !width) return
+
+    console.log(e.target.parentElement)
+
+    const { left, top, height } = e.target.parentElement.getBoundingClientRect()
+
+    const start = {
+      x: e.clientX,
+      y: e.clientY,
+    }
+
+    const newId = createSelectNode(
+      id,
+      project({ x: left, y: top }),
+      data.relateds
+    )
+    if (!newId) return
+
+    await cursor((e) => {
+      const delta = {
+        x: e.clientX - start.x,
+        y: e.clientY - start.y,
+      }
+      setNodePosition(newId, project({ x: left + delta.x, y: top + delta.y }))
+    })
+  }
 
   return (
-    <>
+    <div className={s.container}>
       <div
         className={s.buttons}
         style={{
-          visibility: hoveredNodeId === id ? 'visible' : 'hidden',
+          visibility:
+            data.type !== 'loading' && hoveredNodeId === id
+              ? 'visible'
+              : 'hidden',
         }}
         ref={ref}
       >
-        {when('self' in data && 'html' in data.self && data.self.html).then(
-          () => (
-            <button onClick={selectWikiData}>
-              <IoMdInformation />
-            </button>
-          )
-        )}
-        <button>
-          <IoIosTrash />
-        </button>
-      </div>
+        {data.type === 'normal' && selectedWikiData ? (
+          <a
+            className={`${s.close} ${s.button}`}
+            href={selectedWikiData.url.desktop}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <CgArrowTopRight />
+          </a>
+        ) : undefined}
 
-      <div className={s.wikiNode} onMouseEnter={onMouseEnter}>
-        <Handle
-          type="target"
-          position={Position.Right}
-          className={s.handle}
-          onMouseDown={onDragHandle}
-          style={{
-            visibility: data.type === 'normal' ? 'visible' : 'hidden',
-          }}
-        >
-          <div style={{ background: 'white', margin: '10px' }}>
-            <IoIosAdd
-              style={{ height: '100%', width: '100%', pointerEvents: 'none' }}
-            />
-          </div>
-        </Handle>
-
-        <div>{content()}</div>
-
-        {nodes[0].id !== id ? (
-          <Handle
-            type="source"
-            position={Position.Left}
-            id="a"
-            className={s.handle}
-            style={{
-              height: '2px',
-              width: '2px',
-              left: '-2px',
-              border: 'none',
-              padding: 'none',
-              pointerEvents: 'none',
-              backgroundColor: 'white',
-            }}
-          />
+        {nodes[0]?.id !== id ? (
+          <button className={s.button} onClick={() => removeNode(id)}>
+            <IoIosTrash />
+          </button>
         ) : undefined}
       </div>
-    </>
+
+      <div className={s.wikiNode}>
+        <div
+          onMouseMove={onMouseMove}
+          onMouseEnter={(e) => setHoveredNodeId(undefined)}
+        >
+          <Handle
+            type="target"
+            position={Position.Right}
+            className={s.handle}
+            onMouseDown={onDragHandle}
+            style={{
+              pointerEvents: 'none',
+              right: '0px',
+              padding: '0px',
+              visibility:
+                data.type === 'normal' || (nodes[0] && nodes.length > 1)
+                  ? 'visible'
+                  : 'hidden',
+            }}
+          ></Handle>
+
+          {content()}
+
+          {nodes[0]?.id !== id ? (
+            <Handle
+              type="source"
+              position={Position.Left}
+              id="a"
+              className={s.handle}
+              style={{
+                left: '0px',
+                padding: '0px',
+                border: 'none',
+                pointerEvents: 'none',
+                backgroundColor: 'white',
+              }}
+            />
+          ) : undefined}
+        </div>
+
+        {data.type === 'normal' && selectedWikiData && hoveredNodeId === id ? (
+          <button
+            className={`${s.button} ${s.add} nodrag nopan`}
+            onMouseDown={addNode}
+          >
+            <IoIosAdd />
+          </button>
+        ) : undefined}
+      </div>
+    </div>
   )
 }

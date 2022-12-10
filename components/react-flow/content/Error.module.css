@@ -1,0 +1,7 @@
+.error {
+  color: red !important;
+  display: inline-block;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  padding-right: 15px;
+}
