@@ -7,6 +7,7 @@
   position: relative;
   display: inline-block;
   font-size: 15pt;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.025);
 }
 
 .wikiNode * {
@@ -55,8 +56,8 @@
 }
 
 .handle {
-  background: white;
-  /* border: 1px solid #dfdfdf; */
+  background: transparent;
+  border: none;
 }
 
 .button {
@@ -66,6 +67,9 @@
   border-radius: 50%;
   pointer-events: all;
   z-index: 10;
+  text-align: center;
+  line-height: 22px;
+  font-size: 20px;
 }
 
 .buttons svg {
@@ -88,6 +92,7 @@
 
 .button:hover {
   background: white;
+  color: darkgrey;
 }
 
 .button:hover * {

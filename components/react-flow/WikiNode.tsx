@@ -222,12 +222,6 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
             }}
           >
             <div>{content()}</div>
-
-            {data.type === 'normal' && data.showThumbnail ? (
-              <div className={s.thumbnailContainer}>
-                <img src={data.self.thumbnail} className={s.thumbnail} />
-              </div>
-            ) : undefined}
           </div>
 
           {nodes[0]?.id !== id ? (

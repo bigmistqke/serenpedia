@@ -7,7 +7,29 @@
 .normal:hover {
   color: black;
 }
+
+.normal {
+  display: flex;
+  flex-direction: column;
+}
+
+.normal > div {
+  display: flex;
+}
+
+.thumbnailContainer {
+  overflow: hidden;
+  margin-bottom: 10px;
+  display: flex;
+  align-self: center;
+  pointer-events: none;
+}
+
 .thumbnail {
-  max-width: 100%;
-  max-height: 250px;
+  border-radius: 5px;
+  width: 100%;
+  display: inline-block;
+  max-width: 150px;
+  max-height: 150px;
+  object-fit: contain;
 }

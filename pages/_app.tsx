@@ -1,6 +1,7 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import './index.css'
+import './wikipedia.css'
 
 // pages/_app.js
 import { Inconsolata } from '@next/font/google'

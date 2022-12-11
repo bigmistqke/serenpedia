@@ -12,14 +12,21 @@ function Normal({ id, data }: { id: string; data: NormalNodeData }) {
   // }, [data, setSelectedWikiDataNormal])
 
   return (
-    <span
-      className={s.normal}
-      onClick={() => {
-        setSelectedWikiDataNormal(id, data.self)
-      }}
-    >
-      <div>{data.type === 'normal' && data.self.title}</div>
-    </span>
+    <div className={s.normal}>
+      <span
+        // className={s.normal}
+        onClick={() => {
+          setSelectedWikiDataNormal(id, data.self)
+        }}
+      >
+        <div>{data.type === 'normal' && data.self.title}</div>
+      </span>
+      {data.showThumbnail && data.self.thumbnail ? (
+        <div className={s.thumbnailContainer}>
+          <img src={data.self.thumbnail} className={s.thumbnail} />
+        </div>
+      ) : undefined}
+    </div>
   )
 }
 

@@ -8,6 +8,13 @@
 
   width: 100%;
 }
+table,
+table tr {
+  border: 1px solid lightgrey;
+}
+table * {
+  border-collapse: collapse;
+}
 
 .thumbcaption {
   font-size: 10pt;
@@ -37,8 +44,10 @@ th {
   width: auto !important;
 }
 
-table {
+table,
+.infobox {
   border: 1px solid #e6e6e6;
+  border-collapse: collapse;
 }
 
 td {
@@ -53,4 +62,8 @@ ul {
 
 .listen {
   width: 100% !important;
+}
+
+.infobox-image {
+  text-align: center;
 }
