@@ -4,6 +4,7 @@ import { html } from 'wikipedia/dist'
 import useStore from '../store'
 import s from './Panel.module.css'
 import Loading from './Loading'
+import useQueryTitle from './react-flow/content/useQueryTitle'
 
 function Panel() {
   const {
@@ -11,9 +12,13 @@ function Panel() {
     setSelectedWikiDataNormal,
     setNodeDataHtmlNormal,
     deselectWikiData,
-    focusOnPanel,
     nodes,
+    setNodeToNormal,
+    setNodeToError,
+    selectedNode,
   } = useStore()
+
+  const queryTitle = useQueryTitle()
 
   const [loading, setLoading] = useState<boolean>()
 
@@ -35,9 +40,8 @@ function Panel() {
     if (!selectedWikiData) return
 
     extraHtml = extraHtml.replace(
-      new RegExp('href=\\"/wiki', 'g'),
-
-      'target="_blank" href="https://www.wikipedia.org/wiki'
+      new RegExp('href=\\"/wiki/', 'g'),
+      'class="link" data-link="'
     )
 
     setLoading(false)
@@ -52,6 +56,63 @@ function Panel() {
       })
     }
   }, [selectedWikiData])
+
+  const selectedNodeRef = useRef(selectedNode)
+
+  useEffect(() => {
+    selectedNodeRef.current = nodes.find(
+      (node) => node.id === selectedWikiData?.id
+    )
+  })
+
+  const addLink = useCallback(
+    async (link: Element) => {
+      const originalTitle = link.getAttribute('data-link')
+
+      if (!originalTitle) return
+
+      const title = decodeURI(originalTitle.split('#')[0])
+
+      const node = selectedNodeRef.current
+      if (!node) return
+
+      const position = {
+        x: node.position.x + (node.width || 0) + 75,
+        y: node.position.y,
+      }
+
+      const result = await queryTitle(node.id, title, position)
+
+      if (result.success) {
+        setSelectedWikiDataNormal(result.loadingNodeId, result.self)
+        setNodeToNormal(
+          result.loadingNodeId,
+          result.self,
+          result.relateds,
+          false
+        )
+        // setSelectedNode
+      } else {
+        if (result.loadingNodeId)
+          setNodeToError(result.loadingNodeId, 'could not find any results')
+      }
+    },
+    [selectedNode]
+  )
+
+  const initLink = (link: Element) => {
+    link.classList.add(s.link)
+    link.addEventListener('mousedown', () => {
+      console.log('cloick')
+      addLink(link)
+    })
+  }
+
+  useEffect(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.link').forEach(initLink)
+    }, 0)
+  }, [selectedWikiData?.html])
 
   return (
     <>

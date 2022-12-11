@@ -51,6 +51,7 @@
   display: flex;
   gap: 5px;
   flex-direction: column;
+  z-index: 5;
 }
 .panelButtons > * {
   height: 33px;
@@ -96,5 +97,24 @@
 }
 
 .link {
-  color: blue;
+  text-decoration: underline;
+  text-decoration-color: rgb(228, 228, 228);
+  cursor: pointer;
+}
+
+.link:hover {
+  color: black;
+  text-decoration-color: grey;
+}
+
+.showMore {
+  padding-bottom: 10px;
+  padding-left: 15px;
+  color: lightgrey;
+}
+
+.showMore:hover {
+  padding-bottom: 10px;
+  padding-left: 15px;
+  color: grey;
 }

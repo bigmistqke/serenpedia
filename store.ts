@@ -203,126 +203,83 @@ type SelectedWikiData =
 
 export type RFState = {
   nodes: Node<NodeData>[]
-
   edges: Edge[]
-
   hoveredNodeId: string | undefined
-
   selectedWikiData?: SelectedWikiData
-
+  selectedNode?: Node<NodeData>
   tooltipText?: string
-
   tooltip: {
     text: string
-
     hidden: boolean
   }
-
   focusOnPanel: boolean
-
   onNodesChange: OnNodesChange
-
   onEdgesChange: OnEdgesChange
-
   onConnect: OnConnect
-
   open: (data: { nodes: Node<NodeData>[]; edges: Edge[] }) => void
-
   init: () => void
-
   removeNode: (id: string) => void
-
   createLoadingNode: (
     id: string,
-
     position: { x: number; y: number }
   ) => string | undefined
-
   createSelectNode: (
     sourceId: string,
-
     position: { x: number; y: number },
-
     options: WikiData[]
   ) => string | undefined
-
   setNodePosition: (nodeId: string, position: { x: number; y: number }) => void
-
   setNodeDataTitle: (nodeId: string, title: string) => void
-
   setNodeDataSelf: (nodeId: string, self: WikiData) => void
-
   setNodeDataRelateds: (nodeId: string, relateds: WikiData[]) => void
-
   setNodeDataCompletions: (nodeId: string, completions: string[]) => void
-
   setNodeDataOptions: (nodeId: string, options: WikiData[]) => void
-
   setNodeDataHtmlNormal: (nodeId: string, html: string) => void
-
   setNodeDataHtmlSelect: (
     nodeId: string,
-
     optionIndex: number,
-
     html: string
   ) => void
-
   setNodeToNormal: (
     nodeId: string,
-
     self: WikiData & { html: string | undefined },
-
     relateds: WikiData[],
-
     showThumbnail: boolean | 'ignore'
   ) => void
-
   setNodeToSelect: (nodeId: string, options: WikiData[]) => void
-
   setNodeToError: (nodeId: string, message: string) => void
-
   setNodeToQuery: (nodeId: string, title: string, completions: string[]) => void
-
   setNodeToLoading: (nodeId: string) => void
-
   setHoveredNodeId: (nodeId: string | undefined) => void
-
   deselectWikiData: () => void
-
+  setSelectedNode: (node: Node<NodeData>) => void
   setSelectedWikiDataNormal: (
     id: string,
-
     wikiData: WikiData | undefined
   ) => void
-
   setSelectedWikiDataSelect: (
     id: string,
-
     index: number,
-
     wikiData: WikiData | undefined
   ) => void
-
   setTooltipText: (tooltipText: string) => void
-
   hideTooltip: () => void
-
   showTooltip: () => void
-
   setFocusOnPanel: (focus: boolean) => void
 }
 
 // this is our useStore hook that we can use in our components to get parts of the store and call actions
-
+const nodes = initialNodes()
 const useStore = create<RFState>((set, get) => ({
-  nodes: initialNodes(),
+  nodes,
 
   edges: initialEdges,
 
   hoveredNodeId: undefined,
 
   selectedWikiData: undefined,
+
+  selectedNode: nodes[0],
 
   tooltip: {
     text: '',
@@ -744,6 +701,12 @@ const useStore = create<RFState>((set, get) => ({
   deselectWikiData: () => {
     set({
       selectedWikiData: undefined,
+    })
+  },
+
+  setSelectedNode: (selectedNode: Node<NodeData>) => {
+    set({
+      selectedNode,
     })
   },
 

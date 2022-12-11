@@ -167,7 +167,14 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
         ) : undefined}
 
         {nodes[0]?.id !== id ? (
-          <button className={s.button} onClick={() => removeNode(id)}>
+          <button
+            className={s.button}
+            onClick={() => {
+              removeNode(id)
+              setTooltipText('')
+              hideTooltip()
+            }}
+          >
             <IoIosTrash />
           </button>
         ) : undefined}

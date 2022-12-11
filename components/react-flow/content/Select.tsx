@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 
 import useStore, { NormalNodeData, WikiData } from '../../../store'
 import when from '../../../utils/when'
-import page from '../../../utils/wikipedia/page'
+import page from '../../../api/wikipedia/page'
 
 import s from './Select.module.css'
 

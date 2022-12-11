@@ -106,7 +106,7 @@
 
 .button.add {
   position: absolute;
-  right: -35px;
+  right: -32px;
   top: 50%;
   transform: translateY(-50%);
 }

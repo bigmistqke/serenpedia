@@ -14,7 +14,6 @@ function Normal({ id, data }: { id: string; data: NormalNodeData }) {
   return (
     <div className={s.normal}>
       <span
-        // className={s.normal}
         onClick={() => {
           setSelectedWikiDataNormal(id, data.self)
         }}

@@ -5,9 +5,16 @@
   text-align: center;
 
   padding: 5px;
-
   width: 100%;
+  max-width: 100% !important;
 }
+.thumbinner {
+  text-align: center;
+}
+.thumbinner * {
+  max-width: 100% !important;
+}
+
 table,
 table tr {
   border: 1px solid lightgrey;
@@ -28,7 +35,8 @@ table * {
 .infobar,
 .mw-editsection,
 .box-Multiple_issues,
-.wikitable {
+.wikitable,
+.navbox {
   display: none;
 }
 
@@ -66,4 +74,18 @@ ul {
 
 .infobox-image {
   text-align: center;
+}
+
+.mw-parser-output img {
+  max-width: 100%;
+  /* 
+  max-height: 150px; */
+  object-fit: contain;
+  height: auto !important;
+}
+
+.mw-parser-output * {
+  float: none !important;
+  width: auto !important;
+  position: relative !important;
 }

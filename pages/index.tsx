@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import ReactFlow, { Background, Node } from 'reactflow'
+import ReactFlow, { Background, Node, ReactFlowProvider } from 'reactflow'
 import shallow from 'zustand/shallow'
 import 'reactflow/dist/style.css'
 import Head from 'next/head'
@@ -31,19 +31,6 @@ const idbConfig = {
 
 const nodeTypes = { defaultNode: WikiNode }
 
-const selector = (state: RFState) => ({
-  nodes: state.nodes,
-  edges: state.edges,
-  onNodesChange: state.onNodesChange,
-  onEdgesChange: state.onEdgesChange,
-  onConnect: state.onConnect,
-  selectedWikiData: state.selectedWikiData,
-  tooltip: state.tooltip,
-  hideTooltip: state.hideTooltip,
-  showTooltip: state.showTooltip,
-  setTooltipText: state.setTooltipText,
-})
-
 function App() {
   const {
     nodes,
@@ -55,8 +42,8 @@ function App() {
     tooltip,
     hideTooltip,
     showTooltip,
-    setTooltipText,
-  } = useStore(selector, shallow)
+    setSelectedNode,
+  } = useStore()
 
   useEffect(() => {
     setupIndexedDB(idbConfig)
@@ -67,7 +54,6 @@ function App() {
 
   const [cursorPosition, setCursorPosition] = useState<{
     x: number
-
     y: number
   }>()
 
@@ -90,75 +76,82 @@ function App() {
         })
       }}
     >
-      <Head>
-        <title>serenpedia</title>
+      <ReactFlowProvider>
+        <Head>
+          <title>serenpedia</title>
 
-        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-      </Head>
+          <meta
+            name="viewport"
+            content="initial-scale=1.0, width=device-width"
+          />
+        </Head>
 
-      <div
-        style={{
-          flex: 1,
-
-          position: 'relative',
-
-          overflow: 'hidden',
-        }}
-      >
         <div
-          className={s.graph}
-          onMouseMove={(e) => {
-            if (e.target.class === 'react-flow__pane') hideTooltip()
+          style={{
+            flex: 1,
+
+            position: 'relative',
+
+            overflow: 'hidden',
           }}
-
-          // onClick={() => (focusOnPanel ? setFocusOnPanel(false) : undefined)}
         >
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            fitView
-            onNodeDrag={(e) => {
-              setCursorPosition({
-                x: e.clientX,
+          <div
+            className={s.graph}
+            onMouseMove={(e) => {
+              if (e.target.class === 'react-flow__pane') hideTooltip()
+            }}
 
-                y: e.clientY,
-              })
-            }}
-            onNodeDragStop={(e, node: Node<NodeData>) => {
-              showTooltip()
-            }}
-            onNodeDragStart={(e) => {
-              hideTooltip()
+            // onClick={() => (focusOnPanel ? setFocusOnPanel(false) : undefined)}
+          >
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              fitView
+              onNodeDrag={(e, node) => {
+                setSelectedNode(node)
+                setCursorPosition({
+                  x: e.clientX,
+
+                  y: e.clientY,
+                })
+              }}
+              onNodeDragStop={(e, node: Node<NodeData>) => {
+                showTooltip()
+              }}
+              onNodeDragStart={(e, node) => {
+                setSelectedNode(node)
+                hideTooltip()
+              }}
+            >
+              <Background
+                style={{
+                  background: '#e8e8e8',
+                }}
+              />
+            </ReactFlow>
+          </div>
+
+          <Panel />
+        </div>
+
+        <Footer />
+
+        {cursorPosition && !tooltip.hidden && tooltip.text ? (
+          <div
+            className={s.tooltip}
+            style={{
+              left: cursorPosition.x + 10,
+              top: cursorPosition.y - 30,
             }}
           >
-            <Background
-              style={{
-                background: '#e8e8e8',
-              }}
-            />
-          </ReactFlow>
-        </div>
-
-        <Panel />
-      </div>
-
-      <Footer />
-
-      {cursorPosition && !tooltip.hidden && tooltip.text ? (
-        <div
-          className={s.tooltip}
-          style={{
-            left: cursorPosition.x + 10,
-            top: cursorPosition.y - 30,
-          }}
-        >
-          {tooltip.text.slice(0, 85)}...
-        </div>
-      ) : undefined}
+            {tooltip.text.slice(0, 85)}...
+          </div>
+        ) : undefined}
+      </ReactFlowProvider>
     </div>
   )
 }
