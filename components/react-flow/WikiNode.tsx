@@ -1,16 +1,20 @@
 import { useCallback, useRef, useState } from 'react'
 import { CgArrowTopRight } from 'react-icons/cg'
-import { IoIosAdd, IoIosTrash } from 'react-icons/io'
+import { IoIosAdd, IoIosCamera, IoIosTrash } from 'react-icons/io'
 import { Handle, NodeProps, Position, useReactFlow } from 'reactflow'
+
 import useStore, { NodeData } from '../../store'
-import cursor from '../../utils/cursor'
+
+import Loading from '../Loading'
 import Query from './content/Query'
-import Loading from './content/Loading'
 import Normal from './content/Normal'
 import Select from './content/Select'
 import Error from './content/Error'
 
+import cursor from '../../utils/cursor'
+
 import s from './WikiNode.module.css'
+import loadingStyle from './content/Loading.module.css'
 
 export default function WikiNode({ id, data }: NodeProps<NodeData>) {
   const {
@@ -21,6 +25,11 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
     createSelectNode,
     removeNode,
     setNodePosition,
+    setNodeToNormal,
+    setSelectedWikiDataNormal,
+    setTooltipText,
+    hideTooltip,
+    tooltip,
   } = useStore()
 
   const { project } = useReactFlow()
@@ -28,16 +37,6 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
   const [loadingNodeId, setLoadingNodeId] = useState<string | undefined>()
 
   const ref = useRef<HTMLDivElement>(null)
-
-  const onMouseMove = useCallback(() => {
-    setHoveredNodeId(id)
-  }, [setHoveredNodeId, id])
-
-  const onDragHandle = useCallback(async () => {
-    const { clientX, clientY } = await cursor()
-    if (data.type !== 'normal' || !ref.current?.offsetWidth) return
-    createSelectNode(id, project({ x: clientX, y: clientY }), data.relateds)
-  }, [ref, data, createSelectNode, id, project])
 
   const content = useCallback(() => {
     switch (data.type) {
@@ -51,14 +50,25 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
             setLoadingNodeId={setLoadingNodeId}
           />
         )
+
       case 'loading':
-        return <Loading />
+        return <Loading className={loadingStyle.loading} />
+
       case 'normal':
-        return <Normal data={data} />
+        return <Normal id={id} data={data} />
+
       case 'select':
-        return <Select id={id} options={data.options} />
+        return (
+          <Select
+            id={id}
+            options={data.options}
+            showThumbnail={data.showThumbnail}
+          />
+        )
+
       case 'error':
         return <Error message={data.message} />
+
       default:
         return <span>error</span>
     }
@@ -68,37 +78,50 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
     if (data.type !== 'normal') return
 
     const width = ref.current?.offsetWidth
+
     const position = nodes.find((node) => node.id === id)?.position
 
     if (!position || !width) return
-
-    console.log(e.target.parentElement)
 
     const { left, top, height } = e.target.parentElement.getBoundingClientRect()
 
     const start = {
       x: e.clientX,
+
       y: e.clientY,
     }
 
     const newId = createSelectNode(
       id,
-      project({ x: left, y: top }),
+
+      project({ x: left + 10, y: top + 10 }),
+
       data.relateds
     )
+
     if (!newId) return
 
     await cursor((e) => {
       const delta = {
         x: e.clientX - start.x,
+
         y: e.clientY - start.y,
       }
-      setNodePosition(newId, project({ x: left + delta.x, y: top + delta.y }))
+
+      setNodePosition(
+        newId,
+
+        project({
+          x: left + delta.x + 10,
+
+          y: top + delta.y + 10,
+        })
+      )
     })
   }
 
   return (
-    <div className={s.container}>
+    <div className={s.container} onMouseMove={() => setHoveredNodeId(id)}>
       <div
         className={s.buttons}
         style={{
@@ -109,10 +132,33 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
         }}
         ref={ref}
       >
-        {data.type === 'normal' && selectedWikiData ? (
+        {data.type === 'normal' &&
+        hoveredNodeId === id &&
+        data.self.thumbnail ? (
+          <button
+            className={s.button}
+            onClick={() => {
+              if (data.type === 'normal') {
+                setNodeToNormal(
+                  id,
+
+                  data.self,
+
+                  data.relateds,
+
+                  !data.showThumbnail
+                )
+              }
+            }}
+          >
+            <IoIosCamera />
+          </button>
+        ) : undefined}
+
+        {data.type === 'normal' && hoveredNodeId === id ? (
           <a
             className={`${s.close} ${s.button}`}
-            href={selectedWikiData.url.desktop}
+            href={selectedWikiData?.url.desktop}
             target="_blank"
             rel="noreferrer"
           >
@@ -127,20 +173,39 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
         ) : undefined}
       </div>
 
-      <div className={s.wikiNode}>
-        <div
-          onMouseMove={onMouseMove}
-          onMouseEnter={(e) => setHoveredNodeId(undefined)}
-        >
+      <div
+        className={s.wikiNode}
+        onMouseMove={() => {
+          if (data.type === 'normal') {
+            if (!data.self?.extract?.text) {
+              console.error('data.self.extract.text is undefined', data)
+              return
+            }
+
+            setTooltipText(data.self.extract.text)
+          }
+        }}
+        onMouseUp={() => {
+          if (data.type === 'normal') setTooltipText(data.self.extract.text)
+        }}
+        onMouseLeave={() => {
+          hideTooltip()
+        }}
+      >
+        <div>
           <Handle
             type="target"
             position={Position.Right}
             className={s.handle}
-            onMouseDown={onDragHandle}
+            // onMouseDown={onDragHandle}
+
             style={{
               pointerEvents: 'none',
+
               right: '0px',
+
               padding: '0px',
+
               visibility:
                 data.type === 'normal' || (nodes[0] && nodes.length > 1)
                   ? 'visible'
@@ -148,7 +213,22 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
             }}
           ></Handle>
 
-          {content()}
+          <div
+            className={s.content}
+            onMouseDownCapture={() => {
+              if (data.type === 'normal') {
+                setSelectedWikiDataNormal(id, data.self)
+              }
+            }}
+          >
+            <div>{content()}</div>
+
+            {data.type === 'normal' && data.showThumbnail ? (
+              <div className={s.thumbnailContainer}>
+                <img src={data.self.thumbnail} className={s.thumbnail} />
+              </div>
+            ) : undefined}
+          </div>
 
           {nodes[0]?.id !== id ? (
             <Handle
@@ -158,19 +238,26 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
               className={s.handle}
               style={{
                 left: '0px',
+
                 padding: '0px',
+
                 border: 'none',
+
                 pointerEvents: 'none',
+
                 backgroundColor: 'white',
               }}
             />
           ) : undefined}
         </div>
 
-        {data.type === 'normal' && selectedWikiData && hoveredNodeId === id ? (
+        {data.type === 'normal' &&
+        hoveredNodeId === id &&
+        data.relateds.length > 0 ? (
           <button
             className={`${s.button} ${s.add} nodrag nopan`}
             onMouseDown={addNode}
+            ref={ref}
           >
             <IoIosAdd />
           </button>

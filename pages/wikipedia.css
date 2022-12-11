@@ -1,0 +1,56 @@
+.thumb,
+.thumbinner {
+  display: inline-block;
+
+  text-align: center;
+
+  padding: 5px;
+
+  width: 100%;
+}
+
+.thumbcaption {
+  font-size: 10pt;
+}
+
+.sistersitebox,
+.dmbox-disambig,
+#disambigbox,
+.ambox,
+.infobox,
+.infobar,
+.mw-editsection,
+.box-Multiple_issues,
+.wikitable {
+  display: none;
+}
+
+.sidebar {
+  width: auto !important;
+}
+
+li {
+  white-space: normal !important;
+}
+
+th {
+  width: auto !important;
+}
+
+table {
+  border: 1px solid #e6e6e6;
+}
+
+td {
+  border: 1px solid #e6e6e6;
+
+  padding: 5px;
+}
+
+ul {
+  padding-left: 25px;
+}
+
+.listen {
+  width: 100% !important;
+}
