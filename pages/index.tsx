@@ -56,111 +56,107 @@ function App() {
     y: number
   }>()
 
-  return (
-    <div
-      style={{
-        width: '100vw',
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-      onMouseMoveCapture={(e) => {
-        setCursorPosition({
-          x: e.clientX,
+  const isTooltipShown = cursorPosition && !tooltip.hidden && tooltip.text
 
-          y: e.clientY,
-        })
-      }}
-    >
-      <ReactFlowProvider>
-        <Script src="https://embedsocial.com/cdn/ef.js" />
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-50GEGCF66L"
-        />
-        <Script
-          dangerouslySetInnerHTML={{
-            __html: `
+  return (
+    <>
+      <Script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-50GEGCF66L"
+      />
+      <Script
+        dangerouslySetInnerHTML={{
+          __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-50GEGCF66L');`,
-          }}
-        />
+        }}
+      />
+      <Head>
+        <title>serenpedia</title>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+      </Head>
+      <div
+        style={{
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+        onMouseMoveCapture={(e) => {
+          setCursorPosition({
+            x: e.clientX,
 
-        <Head>
-          <title>serenpedia</title>
-
-          <meta
-            name="viewport"
-            content="initial-scale=1.0, width=device-width"
-          />
-        </Head>
-
-        <div
-          style={{
-            flex: 1,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
+            y: e.clientY,
+          })
+        }}
+      >
+        <ReactFlowProvider>
           <div
-            className={s.graph}
-            onMouseMove={(e) => {
-              if ((e.target as HTMLDivElement).className === 'react-flow__pane')
-                hideTooltip()
+            style={{
+              flex: 1,
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              nodeTypes={nodeTypes}
-              fitView
-              onNodeDrag={(e, node) => {
-                setSelectedNode(node)
-                setCursorPosition({
-                  x: e.clientX,
-
-                  y: e.clientY,
-                })
-              }}
-              onNodeDragStop={(e, node: Node<NodeData>) => {
-                showTooltip()
-              }}
-              onNodeDragStart={(e, node) => {
-                setSelectedNode(node)
-                hideTooltip()
+            <div
+              className={s.graph}
+              onMouseMove={(e) => {
+                if (
+                  (e.target as HTMLDivElement).className === 'react-flow__pane'
+                )
+                  hideTooltip()
               }}
             >
-              <Background
-                style={{
-                  background: '#e8e8e8',
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                fitView
+                onNodeDrag={(e, node) => {
+                  setSelectedNode(node)
+                  setCursorPosition({
+                    x: e.clientX,
+
+                    y: e.clientY,
+                  })
                 }}
-              />
-            </ReactFlow>
+                onNodeDragStop={(e, node: Node<NodeData>) => {
+                  showTooltip()
+                }}
+                onNodeDragStart={(e, node) => {
+                  setSelectedNode(node)
+                  hideTooltip()
+                }}
+              >
+                <Background
+                  style={{
+                    background: '#e8e8e8',
+                  }}
+                />
+              </ReactFlow>
+            </div>
+            <Panel />
           </div>
-
-          <Panel />
-        </div>
-
-        <Footer />
-
-        {cursorPosition && !tooltip.hidden && tooltip.text ? (
-          <div
-            className={s.tooltip}
-            style={{
-              left: cursorPosition.x + 10,
-              top: cursorPosition.y - 30,
-            }}
-          >
-            {tooltip.text.slice(0, 85)}...
-          </div>
-        ) : undefined}
-      </ReactFlowProvider>
-    </div>
+          <Footer />
+          {isTooltipShown ? (
+            <div
+              className={s.tooltip}
+              style={{
+                left: cursorPosition.x + 10,
+                top: cursorPosition.y - 30,
+              }}
+            >
+              {tooltip.text.slice(0, 85)}...
+            </div>
+          ) : undefined}
+        </ReactFlowProvider>
+      </div>
+    </>
   )
 }
 
