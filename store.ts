@@ -11,30 +11,22 @@ import {
   OnEdgesChange,
   OnNodesChange,
 } from 'reactflow'
-
 import zeptoid from 'zeptoid'
-
 import create from 'zustand'
 
 export type WikiUrl = {
   desktop: string
-
   mobile: string
 }
 
 export type WikiData = {
   title: string
-
   extract: {
     html: string
-
     text: string
   }
-
   html: string | undefined
-
   thumbnail: string | undefined
-
   url: WikiUrl
 }
 
@@ -46,31 +38,24 @@ export type LoadingNodeData = {
 
 export type ErrorNodeData = {
   type: 'error'
-
   message: string
 }
 
 export type SelectNodeData = {
   type: 'select'
-
   options: WikiData[]
 }
 
 export type QueryNodeData = {
   type: 'query'
-
   title: string
-
   completions: string[]
 }
 
 export type NormalNodeData = {
   type: 'normal'
-
   showThumbnail: boolean
-
   self: WikiData
-
   relateds: WikiData[]
 }
 
@@ -84,16 +69,11 @@ export type NodeData =
 const initialNodes: () => Node<NodeData>[] = () => [
   {
     id: zeptoid(),
-
     type: 'defaultNode',
-
     position: { x: 0, y: 0 },
-
     data: {
       type: 'query',
-
       title: '',
-
       completions: [],
     },
   },
@@ -101,61 +81,41 @@ const initialNodes: () => Node<NodeData>[] = () => [
 
 const getNormalNode = ({
   title,
-
   position,
-
   extract,
-
   thumbnail,
-
   url,
 }: {
   title: string
-
   position: { x: number; y: number }
-
   extract: { html: string; text: string }
-
   thumbnail: string
-
   url: WikiUrl
 }): Node<NodeData> => ({
   id: zeptoid(),
-
   type: 'defaultNode',
-
   position,
-
   data: {
     type: 'normal',
-
+    showThumbnail: false,
     self: {
       title,
-
       extract,
-
       thumbnail,
-
       url,
-
       html: undefined,
     },
-
     relateds: [],
   },
 })
 
 const getLoadingNode = (
   id: string,
-
   position: { x: number; y: number }
 ): Node<NodeData> => ({
   id,
-
   type: 'defaultNode',
-
   position,
-
   data: {
     type: 'loading',
   },
@@ -163,34 +123,24 @@ const getLoadingNode = (
 
 const getSelectNode = (
   id: string,
-
   position: { x: number; y: number },
-
   options: WikiData[]
 ): Node<NodeData> => ({
   id,
-
   type: 'defaultNode',
-
   position,
-
   data: {
     type: 'select',
-
     options,
   },
 })
 
 const getDefaultEdge = (targetId: string, sourceId: string) => ({
   id: zeptoid(),
-
   source: sourceId,
-
   target: targetId,
-
   style: {
     stroke: 'white',
-
     strokeWidth: '2px',
   },
 })
@@ -283,7 +233,6 @@ const useStore = create<RFState>((set, get) => ({
 
   tooltip: {
     text: '',
-
     hidden: true,
   },
 
@@ -310,9 +259,7 @@ const useStore = create<RFState>((set, get) => ({
   open: (data: { nodes: Node<NodeData>[]; edges: Edge[] }) => {
     set({
       nodes: data.nodes,
-
       edges: data.edges,
-
       selectedWikiData: undefined,
     })
   },
@@ -320,9 +267,7 @@ const useStore = create<RFState>((set, get) => ({
   init: () => {
     set({
       nodes: initialNodes(),
-
       edges: [],
-
       selectedWikiData: undefined,
     })
   },
@@ -332,70 +277,48 @@ const useStore = create<RFState>((set, get) => ({
       set({
         nodes: get().nodes.filter((node) => node.id !== id),
       })
-
       const edges = get().edges.filter((edge) => edge.target === id)
-
       edges.forEach((edge) => iterate(edge.source))
     }
-
     set({
       selectedWikiData: undefined,
     })
-
     iterate(id)
   },
 
   createLoadingNode: (sourceId: string, position: { x: number; y: number }) => {
     const node = get().nodes.find((node) => node.id === sourceId)
-
     if (!node) {
       console.error('could not find node with id', sourceId)
-
       return undefined
     }
-
     const newId = zeptoid()
-
     const newNode = getLoadingNode(newId, position)
-
     const newEdge = getDefaultEdge(sourceId, newId)
-
     set({
       nodes: [...get().nodes, newNode],
-
       edges: [...get().edges, newEdge],
     })
-
     return newId
   },
 
   createSelectNode: (
     sourceId: string,
-
     position: { x: number; y: number },
-
     options: WikiData[]
   ) => {
     const node = get().nodes.find((node) => node.id === sourceId)
-
     if (!node) {
       console.error('could not find node with id', sourceId)
-
       return undefined
     }
-
     const newId = zeptoid()
-
     const newNode = getSelectNode(newId, position, options)
-
     const newEdge = getDefaultEdge(sourceId, newId)
-
     set({
       nodes: [...get().nodes, newNode],
-
       edges: [...get().edges, newEdge],
     })
-
     return newId
   },
 
@@ -405,7 +328,6 @@ const useStore = create<RFState>((set, get) => ({
         if (node.id === nodeId) {
           node.position = position
         }
-
         return node
       }),
     })
@@ -425,7 +347,6 @@ const useStore = create<RFState>((set, get) => ({
             )
           }
         }
-
         return node
       }),
     })
@@ -438,11 +359,9 @@ const useStore = create<RFState>((set, get) => ({
           if (node.id === id) {
             node.data = {
               type: 'select',
-
               options,
             }
           }
-
           return node
         }),
       ],
@@ -458,7 +377,6 @@ const useStore = create<RFState>((set, get) => ({
               type: 'loading',
             }
           }
-
           return node
         }),
       ],
@@ -477,7 +395,6 @@ const useStore = create<RFState>((set, get) => ({
             )
           }
         }
-
         return { ...node }
       }),
     })
@@ -488,7 +405,6 @@ const useStore = create<RFState>((set, get) => ({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
           // it's important to create a new object here, to inform React Flow about the cahnges
-
           if (node.data.type === 'normal') {
             node.data = { ...node.data, relateds }
           } else {
@@ -497,7 +413,6 @@ const useStore = create<RFState>((set, get) => ({
             )
           }
         }
-
         return node
       }),
     })
@@ -508,7 +423,6 @@ const useStore = create<RFState>((set, get) => ({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
           // it's important to create a new object here, to inform React Flow about the cahnges
-
           if (node.data.type === 'select') {
             node.data = { ...node.data, options }
           } else {
@@ -517,7 +431,6 @@ const useStore = create<RFState>((set, get) => ({
             )
           }
         }
-
         return { ...node }
       }),
     })
@@ -528,11 +441,9 @@ const useStore = create<RFState>((set, get) => ({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
           // it's important to create a new object here, to inform React Flow about the cahnges
-
           if (node.data.type === 'normal') {
             return {
               ...node,
-
               data: { ...node.data, self: { ...node.data.self, html } },
             }
           } else {
@@ -541,7 +452,6 @@ const useStore = create<RFState>((set, get) => ({
             )
           }
         }
-
         return node
       }),
     })
@@ -549,9 +459,7 @@ const useStore = create<RFState>((set, get) => ({
 
   setNodeDataHtmlSelect: (
     nodeId: string,
-
     optionIndex: number,
-
     html: string
   ) => {
     set({
@@ -560,20 +468,16 @@ const useStore = create<RFState>((set, get) => ({
           if (node.data.type === 'select') {
             node.data.options[optionIndex] = {
               ...node.data.options[optionIndex],
-
               html,
             }
           } else {
             console.error(
               'tried to set data.options[i].html of a node which is not of type.select',
-
               html,
-
               node.data
             )
           }
         }
-
         return { ...node }
       }),
     })
@@ -584,7 +488,6 @@ const useStore = create<RFState>((set, get) => ({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
           // it's important to create a new object here, to inform React Flow about the cahnges
-
           if (node.data.type === 'query') {
             node.data = { ...node.data, completions }
           } else {
@@ -593,19 +496,14 @@ const useStore = create<RFState>((set, get) => ({
             )
           }
         }
-
         return { ...node }
       }),
     })
   },
-
   setNodeToNormal: (
     nodeId: string,
-
     self: WikiData & { html: string | undefined },
-
     relateds: WikiData[],
-
     showThumbnail: boolean | 'ignore'
   ) => {
     set({
@@ -614,18 +512,14 @@ const useStore = create<RFState>((set, get) => ({
           if (n.id === nodeId) {
             n.data = {
               type: 'normal',
-
               showThumbnail:
                 showThumbnail === 'ignore'
                   ? n.data.showThumbnail
                   : showThumbnail,
-
               self,
-
               relateds,
             }
           }
-
           return n
         }),
       ],
@@ -639,11 +533,9 @@ const useStore = create<RFState>((set, get) => ({
           if (node.id === id) {
             node.data = {
               type: 'error',
-
               message,
             }
           }
-
           return node
         }),
       ],
@@ -656,26 +548,17 @@ const useStore = create<RFState>((set, get) => ({
         ...get().nodes.map((node) => {
           if (node.id === id) {
             // const title =
-
             // 'self' in node.data
-
             //   ? node.data.self.title
-
             //   : "title" in node.data
-
             //     ? node.data.title
-
             //     : "";
-
             node.data = {
               type: 'query',
-
               title,
-
               completions,
             }
           }
-
           return node
         }),
       ],
@@ -684,11 +567,9 @@ const useStore = create<RFState>((set, get) => ({
 
   connectNodes: (sourceId: string, targetId: string) => {
     const newEdge = getDefaultEdge(sourceId, targetId)
-
     set({
       edges: [...get().edges, newEdge],
     })
-
     return newEdge.id
   },
 
@@ -720,9 +601,7 @@ const useStore = create<RFState>((set, get) => ({
 
   setSelectedWikiDataSelect: (
     id: string,
-
     index: number,
-
     wikiData: WikiData | undefined
   ) => {
     set({
@@ -736,7 +615,6 @@ const useStore = create<RFState>((set, get) => ({
     set({
       tooltip: {
         hidden: false,
-
         text: tooltipText,
       },
     })
@@ -746,7 +624,6 @@ const useStore = create<RFState>((set, get) => ({
     set({
       tooltip: {
         ...get().tooltip,
-
         hidden: true,
       },
     })
@@ -756,7 +633,6 @@ const useStore = create<RFState>((set, get) => ({
     set({
       tooltip: {
         ...get().tooltip,
-
         hidden: false,
       },
     })
