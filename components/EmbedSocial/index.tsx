@@ -5,6 +5,7 @@ export default ({ hidden }: { hidden: boolean }) => {
     <>
       <div
         style={{
+          position: 'absolute',
           visibility: hidden ? 'hidden' : 'visible',
         }}
         className="embedsocial-forms-iframe"
