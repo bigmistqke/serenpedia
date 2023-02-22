@@ -1,11 +1,10 @@
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
+import wiki from 'wikipedia'
 import useStore from '../../../store'
 import when from '../../../utils/when'
-import page from '../../../api/wikipedia/page'
 import s from './Query.module.css'
 
 import { Inconsolata } from '@next/font/google'
-import suggestions from '../../../api/wikipedia/autocomplete'
 import useQueryTitle from './useQueryTitle'
 
 const font = Inconsolata({ subsets: ['latin'] })
@@ -27,13 +26,11 @@ function Query({
     nodes,
     removeNode,
     setNodeDataTitle,
-    createLoadingNode,
     setSelectedWikiDataNormal,
     setNodeDataCompletions,
     setNodeToNormal,
     setNodeToSelect,
     setNodeToError,
-    setNodeToLoading,
     setNodeToQuery,
   } = useStore()
 
@@ -41,8 +38,6 @@ function Query({
 
   const [hasReceivedAutocompletions, setHasReceivedAutocompletions] =
     useState(false)
-
-  // const [completions, setCompletions] = useState<string[]>()
 
   const [localValue, setLocalValue] = useState<string>(title)
   const [inputInFocus, setInputInFocus] = useState<boolean>(false)
@@ -66,6 +61,7 @@ function Query({
     (evt: ChangeEvent<HTMLInputElement>) => {
       //  TODO: very ugly hack to remove the loading/error indicator
       //  need to re-architecture the whole node system
+      //  (lol I have no idea what I was talking about)
 
       if (nodes.length > 1) {
         removeNode(nodes[1].id)
@@ -85,7 +81,9 @@ function Query({
       if (!value) {
         setNodeDataCompletions(id, [])
       } else {
-        suggestions(value).then((suggestions) => {
+        wiki.autocompletions(value).then((suggestions) => {
+          console.log('suggestions are ', suggestions)
+
           setHasReceivedAutocompletions(true)
           if (!suggestions) {
             setNodeDataCompletions(id, [])

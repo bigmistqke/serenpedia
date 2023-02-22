@@ -1,4 +1,4 @@
-import wiki from '../../libs/wikipedia'
+import wiki from 'wikipedia'
 
 import { NormalNodeData } from '../../store'
 
@@ -8,7 +8,6 @@ const page = async (title: string): Promise<NormalNodeData | undefined> => {
 
     const [summary, { pages: relateds }] = await Promise.all([
       await page.summary(),
-
       await page.related(),
     ])
 
