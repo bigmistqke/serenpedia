@@ -18,9 +18,9 @@ export default function App({ Component, pageProps }: AppProps) {
 
   const [isEmbedSocialHidden, setIsEmbedSocialHidden] = useState(true)
 
-  // show EmbedSocial after 3 seconds
+  // show EmbedSocial after 30 seconds
   useEffect(() => {
-    setTimeout(() => setIsEmbedSocialHidden(false), 3000)
+    setTimeout(() => setIsEmbedSocialHidden(false), 30000)
   }, [])
 
   // hotjar initialization
