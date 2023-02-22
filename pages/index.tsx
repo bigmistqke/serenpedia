@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import ReactFlow, { Background, Node, ReactFlowProvider } from 'reactflow'
-import shallow from 'zustand/shallow'
-import 'reactflow/dist/style.css'
+import { useEffect, useState } from 'react'
 import Head from 'next/head'
+import Script from 'next/script'
+
+import ReactFlow, { Background, Node, ReactFlowProvider } from 'reactflow'
+import 'reactflow/dist/style.css'
 import setupIndexedDB from 'use-indexeddb'
 
-import useStore, { NodeData, RFState } from '../store'
+import useStore, { NodeData } from '../store'
 
-import WikiNode from '../components/react-flow/WikiNode'
-import Panel from '../components/Panel'
 import Footer from '../components/Footer'
+import Panel from '../components/Panel'
+import WikiNode from '../components/react-flow/WikiNode'
 
 import s from './index.module.css'
 
@@ -38,7 +39,6 @@ function App() {
     onNodesChange,
     onEdgesChange,
     onConnect,
-    selectedWikiData,
     tooltip,
     hideTooltip,
     showTooltip,
@@ -48,7 +48,6 @@ function App() {
   useEffect(() => {
     setupIndexedDB(idbConfig)
       .then(() => console.log('success'))
-
       .catch((e) => console.error('error / unsupported', e))
   }, [])
 
@@ -61,11 +60,8 @@ function App() {
     <div
       style={{
         width: '100vw',
-
         height: '100vh',
-
         display: 'flex',
-
         flexDirection: 'column',
       }}
       onMouseMoveCapture={(e) => {
@@ -77,6 +73,21 @@ function App() {
       }}
     >
       <ReactFlowProvider>
+        <Script src="https://embedsocial.com/cdn/ef.js" />
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-50GEGCF66L"
+        />
+        <Script
+          dangerouslySetInnerHTML={{
+            __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-50GEGCF66L');`,
+          }}
+        />
+
         <Head>
           <title>serenpedia</title>
 
@@ -89,19 +100,16 @@ function App() {
         <div
           style={{
             flex: 1,
-
             position: 'relative',
-
             overflow: 'hidden',
           }}
         >
           <div
             className={s.graph}
             onMouseMove={(e) => {
-              if (e.target.class === 'react-flow__pane') hideTooltip()
+              if ((e.target as HTMLDivElement).className === 'react-flow__pane')
+                hideTooltip()
             }}
-
-            // onClick={() => (focusOnPanel ? setFocusOnPanel(false) : undefined)}
           >
             <ReactFlow
               nodes={nodes}

@@ -1,17 +1,43 @@
-import '../styles/globals.css'
+import { useEffect, useState } from 'react'
 import type { AppProps } from 'next/app'
-import './index.css'
-import './wikipedia.css'
+import { hotjar } from 'react-hotjar'
+import * as gtag from '../lib/gtag'
+import { useRouter } from 'next/router'
 
-// pages/_app.js
 import { Inconsolata } from '@next/font/google'
 
-// If loading a variable font, you don't need to specify the font weight
+import '../styles/globals.css'
+import './index.css'
+import './wikipedia.css'
+import EmbedSocial from '../components/EmbedSocial'
+
 const font = Inconsolata({ subsets: ['latin'] })
 
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter()
+
+  const [isEmbedSocialHidden, setIsEmbedSocialHidden] = useState(true)
+
+  // show EmbedSocial after 3 seconds
+  useEffect(() => {
+    setTimeout(() => setIsEmbedSocialHidden(false), 3000)
+  }, [])
+
+  // hotjar initialization
+  useEffect(() => {
+    hotjar.initialize(3313468, 6)
+  }, [])
+
+  // google analytics: handle route-events
+  useEffect(() => {
+    const handleRouteChange = (url: string) => gtag.pageview(url)
+    router.events.on('routeChangeComplete', handleRouteChange)
+    return () => router.events.off('routeChangeComplete', handleRouteChange)
+  }, [router.events])
+
   return (
     <main className={font.className}>
+      <EmbedSocial hidden={isEmbedSocialHidden} />
       <Component {...pageProps} />
     </main>
   )
