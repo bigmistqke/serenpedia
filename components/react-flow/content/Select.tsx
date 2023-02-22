@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 
 import useStore, { NormalNodeData, WikiData } from '../../../store'
 import when from '../../../utils/when'
-import page from '../../../api/wikipedia/page'
+import getWikipediaPage from '../../../api/getWikipediaPage'
 
 import s from './Select.module.css'
 
@@ -52,22 +52,24 @@ function Select({ id, options }: { id: string; options: WikiData[] }) {
 
         setSelectedWikiDataSelect(id, index, selection)
 
-        when(newId, await page(selection.title)).then((newId, data) => {
-          if (data.relateds) {
-            const nodeData = nodes.find((node) => node.id === id)
-              ?.data as NormalNodeData
+        when(newId, await getWikipediaPage(selection.title)).then(
+          (newId, data) => {
+            if (data.relateds) {
+              const nodeData = nodes.find((node) => node.id === id)
+                ?.data as NormalNodeData
 
-            //  TODO: 'ignore'-flag is a bit awkward...
+              //  TODO: 'ignore'-flag is a bit awkward...
 
-            setNodeToNormal(id, data.self, data.relateds, 'ignore')
+              setNodeToNormal(id, data.self, data.relateds, 'ignore')
 
-            setNodeToSelect(newId, data.relateds)
-          } else {
-            // TODO: deal with error
+              setNodeToSelect(newId, data.relateds)
+            } else {
+              // TODO: deal with error
 
-            console.error('could not find relateds!!')
+              console.error('could not find relateds!!')
+            }
           }
-        })
+        )
       }),
 
     [

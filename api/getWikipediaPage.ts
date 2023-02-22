@@ -1,6 +1,6 @@
 import wiki from 'wikipedia'
 
-import { NormalNodeData } from '../../store'
+import { NormalNodeData } from '../store'
 
 const page = async (title: string): Promise<NormalNodeData | undefined> => {
   try {

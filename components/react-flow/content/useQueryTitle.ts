@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import useStore, { WikiData } from '../../../store'
-import page from '../../../api/wikipedia/page'
+import getWikipediaPage from '../../../api/getWikipediaPage'
 
 const useQueryTitle = () => {
   const { nodes, createLoadingNode, setNodeToLoading } = useStore()
@@ -27,7 +27,7 @@ const useQueryTitle = () => {
           loadingNodeId = createLoadingNode(id, position)
         }
 
-        const newPage = await page(title)
+        const newPage = await getWikipediaPage(title)
 
         if (!loadingNodeId) return { loadingNodeId, success: false }
 
