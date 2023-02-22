@@ -1,7 +1,5 @@
-import { useCallback, useRef, useState } from 'react'
-import { CgArrowTopRight } from 'react-icons/cg'
-import { IoIosAdd, IoIosCamera, IoIosTrash } from 'react-icons/io'
-import { Handle, NodeProps, Position, useReactFlow } from 'reactflow'
+import { useCallback, useState } from 'react'
+import { Handle, NodeProps, Position } from 'reactflow'
 
 import useStore, { NodeData } from '../../store'
 
@@ -11,32 +9,21 @@ import Normal from './content/Normal'
 import Select from './content/Select'
 import Error from './content/Error'
 
-import cursor from '../../utils/cursor'
-
 import s from './WikiNode.module.css'
 import loadingStyle from './content/Loading.module.css'
+import { TopIcons, AddIcon } from './content/Icons'
 
 export default function WikiNode({ id, data }: NodeProps<NodeData>) {
   const {
     nodes,
     setHoveredNodeId,
-    selectedWikiData,
     hoveredNodeId,
-    createSelectNode,
-    removeNode,
-    setNodePosition,
-    setNodeToNormal,
     setSelectedWikiDataNormal,
     setTooltipText,
     hideTooltip,
-    tooltip,
   } = useStore()
 
-  const { project } = useReactFlow()
-
   const [loadingNodeId, setLoadingNodeId] = useState<string | undefined>()
-
-  const ref = useRef<HTMLDivElement>(null)
 
   const content = useCallback(() => {
     switch (data.type) {
@@ -58,13 +45,7 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
         return <Normal id={id} data={data} />
 
       case 'select':
-        return (
-          <Select
-            id={id}
-            options={data.options}
-            showThumbnail={data.showThumbnail}
-          />
-        )
+        return <Select id={id} options={data.options} />
 
       case 'error':
         return <Error message={data.message} />
@@ -74,152 +55,49 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
     }
   }, [id, data])
 
-  const addNode = async (e) => {
-    if (data.type !== 'normal') return
-
-    const width = ref.current?.offsetWidth
-
-    const position = nodes.find((node) => node.id === id)?.position
-
-    if (!position || !width) return
-
-    const { left, top, height } = e.target.parentElement.getBoundingClientRect()
-
-    const start = {
-      x: e.clientX,
-
-      y: e.clientY,
-    }
-
-    const newId = createSelectNode(
-      id,
-
-      project({ x: left + 10, y: top + 10 }),
-
-      data.relateds
-    )
-
-    if (!newId) return
-
-    await cursor((e) => {
-      const delta = {
-        x: e.clientX - start.x,
-
-        y: e.clientY - start.y,
+  const handleToolTip = useCallback(() => {
+    if (data.type === 'normal') {
+      if (!data.self?.extract?.text) {
+        console.error('data.self.extract.text is undefined', data)
+        return
       }
+      setTooltipText(data.self.extract.text)
+    }
+  }, [data])
 
-      setNodePosition(
-        newId,
+  const isAddIconVisible =
+    data.type === 'normal' && hoveredNodeId === id && data.relateds.length > 0
 
-        project({
-          x: left + delta.x + 10,
+  const isLeftHandleVisible =
+    data.type === 'normal' || (nodes[0] && nodes.length > 1)
 
-          y: top + delta.y + 10,
-        })
-      )
-    })
-  }
+  const isRightHandleVisible = nodes[0]?.id !== id
 
   return (
-    <div className={s.container} onMouseMove={() => setHoveredNodeId(id)}>
-      <div
-        className={s.buttons}
-        style={{
-          visibility:
-            data.type !== 'loading' && hoveredNodeId === id
-              ? 'visible'
-              : 'hidden',
-        }}
-        ref={ref}
-      >
-        {data.type === 'normal' &&
-        hoveredNodeId === id &&
-        data.self.thumbnail ? (
-          <button
-            className={s.button}
-            onClick={() => {
-              if (data.type === 'normal') {
-                setNodeToNormal(
-                  id,
-
-                  data.self,
-
-                  data.relateds,
-
-                  !data.showThumbnail
-                )
-              }
-            }}
-          >
-            <IoIosCamera />
-          </button>
-        ) : undefined}
-
-        {data.type === 'normal' && hoveredNodeId === id ? (
-          <a
-            className={`${s.close} ${s.button}`}
-            href={selectedWikiData?.url.desktop}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <CgArrowTopRight />
-          </a>
-        ) : undefined}
-
-        {nodes[0]?.id !== id ? (
-          <button
-            className={s.button}
-            onClick={() => {
-              removeNode(id)
-              setTooltipText('')
-              hideTooltip()
-            }}
-          >
-            <IoIosTrash />
-          </button>
-        ) : undefined}
-      </div>
+    <div className={s.container} onMouseEnter={() => setHoveredNodeId(id)}>
+      <TopIcons data={data} id={id} />
 
       <div
         className={s.wikiNode}
-        onMouseMove={() => {
-          if (data.type === 'normal') {
-            if (!data.self?.extract?.text) {
-              console.error('data.self.extract.text is undefined', data)
-              return
-            }
-
-            setTooltipText(data.self.extract.text)
-          }
-        }}
+        onMouseEnter={handleToolTip}
         onMouseUp={() => {
           if (data.type === 'normal') setTooltipText(data.self.extract.text)
         }}
-        onMouseLeave={() => {
-          hideTooltip()
-        }}
+        onMouseLeave={() => hideTooltip()}
       >
         <div>
           <Handle
             type="target"
             position={Position.Right}
             className={s.handle}
-            // onMouseDown={onDragHandle}
-
             style={{
               pointerEvents: 'none',
-
               right: '0px',
-
               padding: '0px',
-
-              visibility:
-                data.type === 'normal' || (nodes[0] && nodes.length > 1)
-                  ? 'visible'
-                  : 'hidden',
+              border: 'none',
+              visibility: isLeftHandleVisible ? 'visible' : 'hidden',
             }}
-          ></Handle>
-
+          />
           <div
             className={s.content}
             onMouseDownCapture={() => {
@@ -231,38 +109,21 @@ export default function WikiNode({ id, data }: NodeProps<NodeData>) {
             <div>{content()}</div>
           </div>
 
-          {nodes[0]?.id !== id ? (
-            <Handle
-              type="source"
-              position={Position.Left}
-              id="a"
-              className={s.handle}
-              style={{
-                left: '0px',
-
-                padding: '0px',
-
-                border: 'none',
-
-                pointerEvents: 'none',
-
-                backgroundColor: 'white',
-              }}
-            />
-          ) : undefined}
+          <Handle
+            type="source"
+            position={Position.Left}
+            id="a"
+            className={s.handle}
+            style={{
+              left: '0px',
+              padding: '0px',
+              border: 'none',
+              pointerEvents: 'none',
+              visibility: isRightHandleVisible ? 'visible' : 'hidden',
+            }}
+          />
         </div>
-
-        {data.type === 'normal' &&
-        hoveredNodeId === id &&
-        data.relateds.length > 0 ? (
-          <button
-            className={`${s.button} ${s.add} nodrag nopan`}
-            onMouseDown={addNode}
-            ref={ref}
-          >
-            <IoIosAdd />
-          </button>
-        ) : undefined}
+        {isAddIconVisible ? <AddIcon id={id} data={data} /> : undefined}
       </div>
     </div>
   )
